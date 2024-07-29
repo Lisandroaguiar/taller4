@@ -29,9 +29,9 @@ boolean[] peleando = new boolean[cantidadCirculos];
 
 boolean[] atacando = new boolean[cantidadCirculos];
 boolean[] discriminando = new boolean[cantidadCirculos];
+boolean mouseAlMedio;
 
 void setup() {
-  // Configuración existente
   size(900, 500);
   menu = new Menu();
   aceleracion = new int[cantidadCirculos];
@@ -63,7 +63,6 @@ void setup() {
   sonidos[0].loop();
 }
 
-
 void draw() {
   if (estado == "menu") {
     background(255);
@@ -84,7 +83,6 @@ void draw() {
     }
   }
 }
-
 void mouseClicked() {
   estado = menu.queEstado();
   moverse = true; // Comienza a moverse según el estado
@@ -128,7 +126,6 @@ void reproducirSonidoEstado() {
   }
 }
 
-
 void dibujarEnemigos() {
   for (int i = 0; i < cantidadCirculos; i++) {
     if (i == 0) {
@@ -142,23 +139,30 @@ void dibujarEnemigos() {
     }
   }
 }
+
 PImage obtenerImagenRojo(int i) {
   float dx = mouseX - circulos[i].x;
   float dy = mouseY - circulos[i].y;
   float dist = sqrt(dx * dx + dy * dy);
-  println(enPelea[i]);
-  if (atacando[i] && estado=="Proteccion" ||atacando[i] && estado=="Acoso" && dist<120) {
+
+  // Verificar si el círculo verde está entre los dos bandos
+  boolean circuloVerdeEntreBandos = mouseY > height / 2 - 100 && mouseY < height / 2 + 100 && mouseX<width/2  && mouseX>200;
+
+  if (estado.equals("Mediacion")) {
+    if (circuloVerdeEntreBandos && circulos[i].detener) {
+      return circuloRojo;
+    } else if (peleando[i]) {
+      return circuloRojoPinchudo;
+    }
+  } else if (atacando[i] && (estado.equals("Proteccion") || estado.equals("Acoso")) && dist < 120) {
     return circuloRojoPinchudo;
-  } else if (estado=="Mediacion"&& peleando[i]  ) {
-    return circuloRojoPinchudo;
-  } else if (discriminando[i] && estado=="Discriminacion") {
+  } else if (discriminando[i] && estado.equals("Discriminacion")) {
     return circuloRojoSemiPinchudo;
   }
-  // Puedes personalizar la lógica para elegir la imagen correcta
-  else {
-    return circuloRojo;
-  }
+  
+  return circuloRojo;
 }
+
 void moverCirculos() {
   for (int i = 1; i < cantidadCirculos; i++) {
     if (estado == "Acoso") {
@@ -177,8 +181,6 @@ void moverCirculos() {
       moverLateral(i);
 
       if (tiempoPegado > 0) {
-
-
         if (tiempoPegado <= 0) {
           tiempoPegado -= (millis() / 1000) - tiempoPegado;
         }
@@ -203,7 +205,6 @@ void moverTimidez(int i) {
   }
 }
 
-
 void moverSoberbia(int i) {
   float dx = mouseX - circulos[i].x;
   float dy = mouseY - circulos[i].y;
@@ -217,20 +218,61 @@ void moverSoberbia(int i) {
 }
 
 void moverMediacion(int i) {
-  boolean estaEnPelea = false;
-  for (int j = i + 1; j < cantidadCirculos; j++) {
-    if (distanciaEntreRojos(i, j) < 60) { // Aumentar distancia de detección de peleas
-      pelear(i, j);
-      estaEnPelea = true;
-      peleando[i] = true;
+  // Verificar si el círculo verde está entre los dos bandos
+  boolean circuloVerdeEntreBandos = mouseY > height / 2 - 100 && mouseY < height / 2 + 100 && mouseX<width/2 && mouseX>200;
+
+  if (circuloVerdeEntreBandos) {
+    // Si el círculo verde está entre los dos bandos, los círculos no deberían moverse
+    circulos[i].detener = true;
+  } else {
+    circulos[i].detener = false;
+    if (i < cantidadCirculos / 2) {
+      // Círculos del bando superior
+      moverBandoSuperior(i);
+    } else {
+      // Círculos del bando inferior
+      moverBandoInferior(i);
     }
-  }
-  if (!estaEnPelea) {
-    moverLateral(i);
-    peleando[i] = false;
   }
 }
 
+
+void moverBandoSuperior(int i) {
+  if (!enPelea[i]) {
+    circulos[i].x = 200+10*i;
+    circulos[i].y = height/2-100; // Mantener en la parte superior
+    enPelea[i] = true;
+  }
+
+  // Movimiento agresivo hacia abajo
+  circulos[i].y += aceleracion[i];
+  if (circulos[i].y > height / 2 ) {
+    circulos[i].y = height / 2; // Limitar al medio de la pantalla
+    aceleracion[i] *= -1; // Invertir dirección
+  }
+
+  if (circulos[i].y<100) {
+    aceleracion[i] *= -1; // Invertir dirección
+  }
+}
+
+void moverBandoInferior(int i) {
+  if (!enPelea[i]) {
+    circulos[i].x = 200+10*i;
+    circulos[i].y = height/2+100; // Mantener en la parte inferior
+    enPelea[i] = true;
+  }
+
+  // Movimiento agresivo hacia arriba
+  circulos[i].y -= aceleracion[i];
+  if (circulos[i].y < height / 2 ) {
+    circulos[i].y = height / 2; // Limitar al medio de la pantalla
+    aceleracion[i] *= -1; // Invertir dirección
+  }
+  if (circulos[i].y>height-100) {
+    aceleracion[i] *= -1; // Invertir dirección
+  }
+}
 void moverAcoso(int i) {
   float dx = mouseX - circulos[i].x;
   float dy = mouseY - circulos[i].y;
@@ -326,17 +368,14 @@ void moverLateral(int i) {
 
 
 void manejarColisiones() {
-  if (estado.equals("Desinteres")) {
-    return; // No manejar colisiones si el estado es Desinteres
-  }
-  for (int i = 0; i < cantidadCirculos; i++) {
+  for (int i = 1; i < cantidadCirculos; i++) {
     for (int j = i + 1; j < cantidadCirculos; j++) {
       float dx = circulos[j].x - circulos[i].x;
       float dy = circulos[j].y - circulos[i].y;
       float dist = sqrt(dx * dx + dy * dy);
-      float minDist = tam; // La distancia mínima para que ocurra una colisión
-      if (i == 0) minDist = tamVerde; // Si es el círculo verde, usa su tamaño
-      if (dist < minDist) { // Calcula la respuesta de colisión
+      float minDist = (tamCirculoRojo + tamCirculoRojo) / 2;
+
+      if (dist < minDist) {
         float angle = atan2(dy, dx);
         float targetX = circulos[i].x + cos(angle) * minDist;
         float targetY = circulos[i].y + sin(angle) * minDist;
@@ -346,11 +385,12 @@ void manejarColisiones() {
         circulos[i].y -= ay;
         circulos[j].x += ax;
         circulos[j].y += ay;
+        peleando[i] = true; // Indicar que los círculos están peleando
+        peleando[j] = true;
       }
     }
   }
 }
-
 void manejarColisionesCirculoVerde(int i) {
   if (estado.equals("Desinteres")) {
     return; // No manejar colisiones si el estado es Desinteres
@@ -405,16 +445,16 @@ void manejarColisionesCirculosRojos(int i, int j) {
     circulos[j].y += ay;
   }
 }
-
 void resetCircles() {
   for (int i = 0; i < cantidadCirculos; i++) {
-    circulos[i].x = random(width);
-    circulos[i].y = random(height);
+    circulos[i] = new Circulos();
     aceleracion[i] = 2;
-    tamCirculoRojo = 40; // Restablecer el tamaño del círculo rojo
+    enPelea[i] = false;
+    peleando[i] = false;
+    atacando[i] = false;
+    discriminando[i] = false;
   }
 }
-
 // Función para verificar la distancia entre dos círculos rojos
 float distanciaEntreRojos(int i, int j) {
   float dx = circulos[j].x - circulos[i].x;
@@ -424,6 +464,8 @@ float distanciaEntreRojos(int i, int j) {
 
 // Función para simular la pelea entre dos círculos rojos
 void pelear(int i, int j) {
+
+
   float dx = circulos[j].x - circulos[i].x;
   float dy = circulos[j].y - circulos[i].y;
   float dist = sqrt(dx * dx + dy * dy);
@@ -438,4 +480,6 @@ void pelear(int i, int j) {
   }
   circulos[i].detener = true;
   circulos[j].detener = true;
+
+
 }

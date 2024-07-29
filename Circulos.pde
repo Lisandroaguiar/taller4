@@ -1,11 +1,11 @@
 class Circulos {
-  float x, y;
- boolean detener; 
+  float x, y, dx, dy;
+  boolean detener;
   Circulos() {
-    x = random(width-100);
-    y = random(height-100);
-        detener = false; // Inicialmente no detenido
-
+    x = random(width);
+    y = random(height);
+    dx = random(-2, 2);
+    dy = random(-2, 2);
   }
 
   void dibujarCirculos(color c, float tam, float x, float y) {
