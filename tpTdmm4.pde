@@ -57,6 +57,7 @@ void setup() {
 
   for (int i=0; i<sonidos.length; i++) {
     sonidos[i]= new SoundFile(this, "/sonidos/sonido"+i+".wav");
+    sonidos[i].amp(0.4);
   }
 
   // Reproducir sonido de fondo
@@ -68,10 +69,10 @@ void draw() {
     background(255);
     menu.mostrarMenu();
     println(menu.queEstado(), estado);
-    resetCircles();
     push();
     cursor();
     pop();
+    resetCircles();
   } else {
     background(fondo);
     noCursor();
@@ -84,6 +85,7 @@ void draw() {
   }
 }
 void mouseClicked() {
+
   estado = menu.queEstado();
   moverse = true; // Comienza a moverse según el estado
   reproducirSonidoEstado();
@@ -106,23 +108,23 @@ void reproducirSonidoEstado() {
 
   // Reproducir el sonido correspondiente al estado actual
   if (estado.equals("Acoso")) {
-    sonidos[1].play();
+    sonidos[1].loop();
   } else if (estado.equals("Discriminacion")) {
-    sonidos[2].play();
+    sonidos[2].loop();
   } else if (estado.equals("Proteccion")) {
-    sonidos[3].play();
+    sonidos[3].loop();
   } else if (estado.equals("Soberbia")) {
-    sonidos[4].play();
+    sonidos[4].loop();
   } else if (estado.equals("Desamparo")) {
-    sonidos[5].play();
+    sonidos[5].loop();
   } else if (estado.equals("Desinteres")) {
-    sonidos[6].play();
+    sonidos[6].loop();
   } else if (estado.equals("Timidez")) {
-    sonidos[7].play();
+    sonidos[7].loop();
   } else if (estado.equals("Empatia")) {
-    sonidos[8].play();
+    sonidos[8].loop();
   } else if (estado.equals("Mediacion")) {
-    sonidos[9].play();
+    sonidos[9].loop();
   }
 }
 
@@ -345,12 +347,22 @@ void moverProteccion(int i) {
 void moverLateral(int i) {
   // Movimiento lateral con rebote en los límites de la pantalla
   if (!circulos[i].detener) {
-    if (circulos[i].x > width - tam / 2 || circulos[i].x < tam / 2) {
+    // Movimiento en el eje x con rebote
+    if (circulos[i].x > width - tamCirculoRojo / 2) {
+      circulos[i].x = width - tamCirculoRojo / 2; // Ajusta para mantener el círculo dentro de la pantalla
+      aceleracion[i] *= -1; // Invertir dirección en el eje x
+    } else if (circulos[i].x < tamCirculoRojo / 2) {
+      circulos[i].x = tamCirculoRojo / 2; // Ajusta para mantener el círculo dentro de la pantalla
       aceleracion[i] *= -1; // Invertir dirección en el eje x
     }
     circulos[i].x += aceleracion[i] * 0.5; // Ralentizar el movimiento lateral
 
-    if (circulos[i].y > height - tam / 2 || circulos[i].y < tam / 2) {
+    // Movimiento en el eje y con rebote
+    if (circulos[i].y > height - tamCirculoRojo / 2) {
+      circulos[i].y = height - tamCirculoRojo / 2; // Ajusta para mantener el círculo dentro de la pantalla
+      aceleracion[i] *= -1; // Invertir dirección en el eje y
+    } else if (circulos[i].y < tamCirculoRojo / 2) {
+      circulos[i].y = tamCirculoRojo / 2; // Ajusta para mantener el círculo dentro de la pantalla
       aceleracion[i] *= -1; // Invertir dirección en el eje y
     }
     circulos[i].y += aceleracion[i] * 0.5; // Ralentizar el movimiento lateral
@@ -364,6 +376,7 @@ void moverLateral(int i) {
     }
   }
 }
+
 
 
 
@@ -453,6 +466,8 @@ void resetCircles() {
     peleando[i] = false;
     atacando[i] = false;
     discriminando[i] = false;
+        tamCirculoRojo = 40; // Restablecer el tamaño del círculo rojo
+
   }
 }
 // Función para verificar la distancia entre dos círculos rojos
