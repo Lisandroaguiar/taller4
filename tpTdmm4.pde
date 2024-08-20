@@ -26,11 +26,14 @@ int cantidadCirculos = 5;
 int contadorSonar=0;
 int queVerde=1;
 boolean mover=false;
+boolean moverNaranja=false;
+
 boolean estaPegadoVerde=false;
 float[] velocidadLateral = new float[cantidadCirculos]; // Array para la velocidad lateral
 float[] desplazamientoLateral = new float[cantidadCirculos]; // Array para el desplazamiento lateral
 float[] noiseOffsetX;
 float[] noiseOffsetY;
+PImage menuBoton, menuR, menuV, menuN;
 String estado;
 Circulos circulos[];
 Circulos circulosNaranjas[];
@@ -54,6 +57,8 @@ boolean[] discriminando = new boolean[cantidadCirculos];
 boolean[] discriminandoNaranjas = new boolean[cantidadCirculos];
 
 boolean mouseAlMedio;
+int contadorSonarTimidez=0;
+int contadorSonarMediacion=0;
 
 void setup() {
   //size(900, 500);
@@ -61,7 +66,13 @@ void setup() {
   fullScreen();
   orientation(LANDSCAPE);
   menu = new Menu();
-  boton= new Boton(width-150, 150, 100, "menu");
+  boton= new Boton(width-150, 150, 100, "menu", 4);
+  boton= new Boton(width-200, 50, 150, "", 4);
+  menuBoton=loadImage("Ameba_Menu.png");
+  menuR=loadImage("Ameba_Rojo.png");
+  menuV=loadImage("Ameba_Verde.png");
+  menuN=loadImage("Ameba_Naranja.png");
+
   aceleracion = new float[cantidadCirculos];
   menu.setupMenu();
   estado = "menu";
@@ -99,7 +110,7 @@ void setup() {
 
     if (i<=9) {
       sonidos[i]= new SoundFile(this, "sonido"+i+".wav");
-      sonidos[i].amp(0.4);
+      sonidos[i].amp(0.3);
     } else {
       sonidos[i]= new SoundFile(this, "sonido"+i+".wav");
       sonidos[i].amp(0.7);
@@ -107,6 +118,7 @@ void setup() {
   }
 
   // Reproducir sonido de fondo
+  sonidos[0].amp(0.1);
   sonidos[0].loop();
 
   for (int i = 0; i < cantidadCirculos; i++) {
@@ -126,13 +138,15 @@ void setup() {
 }
 
 void draw() {
+  reproducirSonidoEstado();
+
 
   if (!estado.equals("Empatia")) {
     queVerde=1;
   }
 
   if (estado == "menu") {
-    background(255);
+    image(fondo, 0, 0, width, height);
     menu.mostrarMenu();
     println(menu.queEstado(), estado);
     push();
@@ -159,7 +173,6 @@ void touchEnded() {
 
   estado = menu.queEstado();
   moverse = true; // Comienza a moverse según el estado
-  reproducirSonidoEstado();
   if (estado.equals("Proteccion")) {
     atacando[atacado] = false; // Asegura que el círculo atacado no esté marcado como atacando
   }
@@ -168,36 +181,58 @@ void touchEnded() {
     estado="menu";
     println("toco");
     tamVerde = 180; // Reiniciar tamaño del círculo verde al volver al menú
-    reproducirSonidoEstado();
   }
 }
 
 
 
 void reproducirSonidoEstado() {
+
   // Detener todos los sonidos primero
-  for (int i = 1; i < sonidos.length; i++) {
-    sonidos[i].stop();
+  if (estado.equals("menu")) {
+    for (int i = 1; i < sonidos.length; i++) {
+      if (i<=9) {
+        sonidos[i].stop();
+      }
+    }
   }
 
   // Reproducir el sonido correspondiente al estado actual
-  if (estado.equals("Acoso")) {
+  if (estado.equals("Acoso") && !sonidos[1].isPlaying()) {
+    sonidos[1].amp(0.4);
+
     sonidos[1].loop();
-  } else if (estado.equals("Discriminacion")) {
+  } else if (estado.equals("Discriminacion")&& !sonidos[2].isPlaying()) {
+    sonidos[2].amp(0.4);
+
     sonidos[2].loop();
-  } else if (estado.equals("Proteccion")) {
+  } else if (estado.equals("Proteccion") && !sonidos[3].isPlaying()) {
+    sonidos[3].amp(0.4);
+
     sonidos[3].loop();
-  } else if (estado.equals("Soberbia")) {
-    sonidos[4].loop();
-  } else if (estado.equals("Desamparo")) {
+  } else if (estado.equals("Soberbia") && !sonidos[4].isPlaying()) {
+    sonidos[4].amp(0.4);
+
+    //sonidos[4].loop();
+  } else if (estado.equals("Desamparo") && !sonidos[5].isPlaying()) {
+    sonidos[5].amp(0.4);
+
     sonidos[5].loop();
-  } else if (estado.equals("Desinteres")) {
+  } else if (estado.equals("Desinteres") && !sonidos[6].isPlaying()) {
+    sonidos[6].amp(0.4);
+
     sonidos[6].loop();
-  } else if (estado.equals("Timidez")) {
+  } else if (estado.equals("Timidez") && !sonidos[7].isPlaying()) {
+    sonidos[7].amp(0.4);
+
     sonidos[7].loop();
-  } else if (estado.equals("Empatia")) {
+  } else if (estado.equals("Empatia") && !sonidos[8].isPlaying()) {
+    sonidos[8].amp(0.4);
+
     sonidos[8].loop();
-  } else if (estado.equals("Mediacion")) {
+  } else if (estado.equals("Mediacion") && !sonidos[9].isPlaying()) {
+    sonidos[9].amp(0.4);
+
     sonidos[9].loop();
   }
 }
@@ -228,7 +263,7 @@ PImage obtenerImagenRojo(int i) {
   float dist = sqrt(dx * dx + dy * dy);
 
   // Verificar si el círculo verde está entre los dos bandos
-  boolean circuloVerdeEntreBandos = mouseY > height / 2 - 100 && mouseY < height / 2 + 100 && mouseX<width/2  && mouseX>200;
+  boolean circuloVerdeEntreBandos = mouseY > height / 2 - 100 && mouseY < height / 2 + 100 && mouseX>400  ;
 
   if (estado.equals("Mediacion")) {
     if (circuloVerdeEntreBandos && circulos[i].detener ) {
@@ -239,8 +274,7 @@ PImage obtenerImagenRojo(int i) {
       return circuloRojoPinchudo;
     }
   } else if (estado.equals("Proteccion")) {
-      return circuloRojoPinchudo;
-    
+    return circuloRojoPinchudo;
   } else if (discriminando[i] && estado.equals("Discriminacion")||discriminandoNaranjas[i] && estado.equals("Discriminacion")) {
 
     return circuloRojoSemiPinchudo;
@@ -250,8 +284,8 @@ PImage obtenerImagenRojo(int i) {
   } else if (estado.equals("Acoso") && dist<230) {
 
     return circuloRojoPinchudo;
-  } 
-  
+  }
+
 
 
   return circuloRojo;
@@ -264,7 +298,7 @@ PImage obtenerImagenNaranja(int i) {
   float dist = sqrt(dx * dx + dy * dy);
 
   // Verificar si el círculo verde está entre los dos bandos
-  boolean circuloVerdeEntreBandos = mouseY > height / 2 - 100 && mouseY < height / 2 + 100 && mouseX<width/2  && mouseX>200;
+  boolean circuloVerdeEntreBandos = mouseY > height / 2 - 100 && mouseY < height / 2 + 100 && mouseX>400;
 
   if (estado.equals("Mediacion")) {
     if (circuloVerdeEntreBandos && circulosNaranjas[i].detener ) {
@@ -324,22 +358,23 @@ void moverTimidez(int i) {
 
 
 
-
   float dist = sqrt(dx * dx + dy * dy);
+
   float dxNaranja = mouseX - circulosNaranjas[i].x;
   float dyNaranja = mouseY - circulosNaranjas[i].y;
   float distNaranjas = sqrt(dx * dx + dy * dy);
 
   if (dist < 220) {
     tamVerde = lerp(tamVerde, 60, 0.5); // Reducir tamaño gradualmente
-    if (!sonidos[16].isPlaying()) {
+    if (!sonidos[16].isPlaying() && contadorSonarTimidez==0) {
       sonidos[16].amp(.7);
-
       sonidos[16].play();
+      contadorSonarTimidez=1;
     }
   } else {
     tamVerde = lerp(tamVerde, 180, 0.05); // Volver al tamaño normal gradualmente
     moverLateral(i);
+    contadorSonarTimidez=0;
   }
 }
 
@@ -351,13 +386,14 @@ void moverSoberbia(int i) {
 
 
 
-  if (dist < 400) {
-    tamVerde = lerp(tamVerde, 400, 0.5); // Aumentar tamaño gradualmente
+  if (dist < 300) {
+    tamVerde = lerp(tamVerde, 300, 0.5); // Aumentar tamaño gradualmente
     if (!sonidos[13].isPlaying() && contadorSonar==0) {
-      sonidos[13].play();
       contadorSonar=1;
+
+      sonidos[13].play();
     }
-  } else if (dist>400) {
+  } else if (dist>300) {
     tamVerde = lerp(tamVerde, 180, 0.05); // Volver al tamaño normal gradualmente
     moverLateral(i);
     contadorSonar=0;
@@ -365,85 +401,64 @@ void moverSoberbia(int i) {
 }
 
 void moverMediacion(int i) {
-  // Verificar si el círculo verde está entre los dos bandos
-  boolean circuloVerdeEntreBandos = mouseY > height / 2 - 100 && mouseY < height / 2 + 100 && mouseX<width/2 && mouseX>200;
+  boolean circuloVerdeEntreBandos = mouseY > height / 2 - 100 && mouseY < height / 2 + 100 && mouseX > 400;
   if (circuloVerdeEntreBandos) {
-    // Si el círculo verde está entre los dos bandos, los círculos no deberían moverse
     circulos[i].detener = true;
     circulosNaranjas[i].detener = true;
-
-    if (!sonidos[18].isPlaying() && contadorSonar==0) {
+    if (!sonidos[18].isPlaying()&&contadorSonarMediacion==0) {
       sonidos[18].play();
-      contadorSonar=1;
+      contadorSonarMediacion=1;
     }
   } else {
     circulos[i].detener = false;
     circulosNaranjas[i].detener = false;
-
-    contadorSonar=0;
-    if (i < cantidadCirculos / 2) {
-      // Círculos del bando superior
-      moverBandoSuperior(i);
-    } else {
-      // Círculos del bando inferior
-      moverBandoInferior(i);
-    }
+    contadorSonarMediacion=0;
+    moverBandoSuperior(i);
+    moverBandoInferior(i);
   }
 }
 
 void moverBandoSuperior(int i) {
   if (!enPelea[i]) {
-    aceleracion[i] = .5;
-    float offsetX = map(i, 0, cantidadCirculos / 2 - 1, 100, width - 100);
+    // Posicionar el círculo rojo al comienzo en la parte superior
+    float offsetX = map(i, 0, cantidadCirculos - 1, width / 2 - 150, width / 2 + 150);
     circulos[i].x = offsetX;
-    circulos[i].y = height / 2 - 100;
+    circulos[i].y = height / 2 - 50;
     enPelea[i] = true;
   }
 
-  // Movimiento agresivo hacia abajo
+  // Mover hacia el centro
   circulos[i].y += aceleracion[i];
-  if (circulos[i].y > height / 2) {
-    circulos[i].y = height / 2;
-    aceleracion[i] *= -1;
-  }
-  if (circulos[i].y < 100) {
-    aceleracion[i] *= -1;
+  if (circulos[i].y >= height / 2 - 50) {
+    circulos[i].y = height / 2 - 50;
   }
 
-  // Movimiento lateral oscilante
+  // Movimiento lateral oscilante (si es necesario)
   desplazamientoLateral[i] += velocidadLateral[i];
-  circulos[i].x += sin(desplazamientoLateral[i]) * 10; // Ajusta la amplitud del movimiento lateral
-
-  // Limitar movimiento lateral para no salir de la pantalla
-  circulos[i].x = constrain(circulos[i].x, 100, width - 100);
+  circulos[i].x += sin(desplazamientoLateral[i]) * 5;
 }
 
 void moverBandoInferior(int i) {
   if (!enPelea[i]) {
-    aceleracion[i] = .5;
-    float offsetX = map(i, cantidadCirculos, cantidadCirculos - 1, 100, width - 100);
-    circulosNaranjas[i].x = offsetX;
-    circulosNaranjas[i].y = height / 2 + 100;
+    // Posicionar el círculo naranja en la parte inferior
+    circulosNaranjas[i].y = height / 2 + 50;
     enPelea[i] = true;
   }
 
-  // Movimiento agresivo hacia arriba
-  circulosNaranjas[i].y -= aceleracion[i];
-  if (circulosNaranjas[i].y < height / 2) {
-    circulosNaranjas[i].y = height / 2;
-    aceleracion[i] *= -1;
-  }
-  if (circulosNaranjas[i].y > height - 100) {
-    aceleracion[i] *= -1;
+  // Movimiento hacia el círculo rojo correspondiente
+  circulosNaranjas[i].x += (circulos[i].x - circulosNaranjas[i].x) * 0.05; // Ajustar la velocidad según sea necesario
+
+  // Mover hacia el centro en el eje Y
+  circulosNaranjas[i].y -= aceleracion[i]*4;
+  if (circulosNaranjas[i].y <= height / 2 + 50) {
+    circulosNaranjas[i].y = height / 2 + 50;
   }
 
-  // Movimiento lateral oscilante
+  // Movimiento lateral oscilante (si es necesario)
   desplazamientoLateral[i] += velocidadLateral[i];
-  circulosNaranjas[i].x += sin(desplazamientoLateral[i]) * 10; // Ajusta la amplitud del movimiento lateral
-
-  // Limitar movimiento lateral para no salir de la pantalla
-  circulosNaranjas[i].x = constrain(circulosNaranjas[i].x, 100, width - 100);
+  circulosNaranjas[i].x += sin(desplazamientoLateral[i]) * 5;
 }
+
 
 void moverAcoso(int i) {
   float dx = mouseX - circulos[i].x;
@@ -463,14 +478,14 @@ void moverAcoso(int i) {
 
 
   if (dist<240) {
+    atacando[i] = true;
+
     if (!sonidos[10].isPlaying()) {
       sonidos[10].play();
-      atacando[i] = true;
     }
   }
   if (dist>340) {
     ajustarDistanciaEntreRojos();
-    sonidos[10].stop();
   }
 }
 
@@ -501,8 +516,9 @@ void moverDiscriminacion(int i) {
     float dyNaranja = circulos[i].y- circulosNaranjas[k].y ;
     float distNaranja = sqrt(dxNaranja * dxNaranja + dyNaranja * dyNaranja);
     float minDistNaranja = tamCirculoRojo; // El tamaño del círculo verde
-  if (distNaranja < minDistNaranja+100) { // Calcula la respuesta de colisión
-      discriminandoNaranjas[i] = true;}
+    if (distNaranja < minDistNaranja+100) { // Calcula la respuesta de colisión
+      discriminandoNaranjas[i] = true;
+    }
 
     if (distNaranja < minDistNaranja) { // Calcula la respuesta de colisión
       discriminandoNaranjas[i] = true;
@@ -514,7 +530,6 @@ void moverDiscriminacion(int i) {
 
       circulos[i].y += dyNaranja * 0.02;
       if (!sonidos[11].isPlaying() && contadorSonar==0) {
-        sonidos[11].play();
         contadorSonar=1;
       }
     } else if (distNaranja>minDistNaranja+220) {
@@ -533,21 +548,36 @@ void moverProteccion(int i) {
 
   float dxNaranja = mouseX - circulosNaranjas[i].x;
   float dyNaranja = mouseY - circulosNaranjas[i].y;
-  float distNaranjas = sqrt(dx * dx + dy * dy);
+  float distNaranjas = sqrt(dxNaranja * dxNaranja + dyNaranja * dyNaranja);
   if (estado == "Proteccion") {
     circulosNaranjas[atacado].x = width / 2;
     circulosNaranjas[atacado].y = height / 2;
+    if (distNaranjas < 230 ) {
+
+      circulosNaranjas[i].x -= dxNaranja * 0.2;
+      circulosNaranjas[i].y -= dyNaranja * 0.2;
+    }
+
+
     if (dist < 230 ) {
       circulos[i].x -= dx * 0.2;
       circulos[i].y -= dy * 0.2;
+
       if (!sonidos[12].isPlaying()) {
         sonidos[12].play();
       }
-    } else  {
+    } else {
       dx = circulosNaranjas[atacado].x - circulos[i].x;
       dy = circulosNaranjas[atacado].y - circulos[i].y;
       circulos[i].x += dx * 0.01;
       circulos[i].y += dy * 0.01;
+
+      dxNaranja = circulosNaranjas[atacado].x - circulosNaranjas[i].x;
+      dyNaranja = circulosNaranjas[atacado].y - circulosNaranjas[i].y;
+      circulosNaranjas[i].x += dxNaranja * 0.01;
+      circulosNaranjas[i].y += dyNaranja * 0.01;
+
+
       atacando[i] = true;
       contadorSonar=0;
     }
@@ -555,12 +585,29 @@ void moverProteccion(int i) {
     float dxD = mouseX - circulos[i].x;
     float dyD = mouseY - circulos[i].y;
     float distCircVerde = sqrt(dxD * dxD + dyD * dyD);
-    if (distCircVerde<230) {
+
+    float dxDNaranja = mouseX - circulosNaranjas[i].x;
+    float dyDNaranja = mouseY - circulosNaranjas[i].y;
+    float distCircVerdeNaranja = sqrt(dxDNaranja * dxDNaranja + dyDNaranja * dyDNaranja);
+
+
+    if (distCircVerde<200) {
       mover=true;
       if (!sonidos[14].isPlaying()) {
         sonidos[14].play();
       }
     }
+
+    if (distCircVerdeNaranja<200) {
+      moverNaranja=true;
+      if (!sonidos[14].isPlaying()) {
+        sonidos[14].play();
+      }
+    }
+    if (moverNaranja) {
+      moverHaciaFueraDePantallaNaranja(i);
+    }
+
     if (mover) {
       moverHaciaFueraDePantalla(i);
     }
@@ -647,36 +694,42 @@ void moverLateral(int i) {
 void moverHaciaFueraDePantalla(int i) {
   float dx = mouseX - circulos[i].x;
   float dy = mouseY - circulos[i].y;
-  float distCircVerde = sqrt(dx * dx + dy * dy);
+
+
+
+  // Calcular la dirección en la que se moverá el círculo
+  float angle = atan2(dy, dx);
+
+  // Si el círculo está dentro de la pantalla, muévelo hacia afuera gradualmente
+  if (circulos[i].x < 0 || circulos[i].x > width || circulos[i].y < 0 || circulos[i].y > height) {
+    circulos[i].x -= cos(angle) * 4; // Mover hacia afuera
+    circulos[i].y -= sin(angle) * 4;
+  } else {
+    // Mover lentamente hacia el borde de la pantalla
+    circulos[i].x -= cos(angle) * 4;
+    circulos[i].y -= sin(angle) * 4;
+  }
+}
+void moverHaciaFueraDePantallaNaranja(int i) {
+
 
   float dxNaranja = mouseX - circulosNaranjas[i].x;
   float dyNaranja = mouseY - circulosNaranjas[i].y;
 
 
   // Calcular la dirección en la que se moverá el círculo
-  float angle = atan2(dy, dx);
   float angleNaranja = atan2(dyNaranja, dxNaranja);
 
-  // Si el círculo está dentro de la pantalla, muévelo hacia afuera gradualmente
-  if (circulos[i].x < 0 || circulos[i].x > width || circulos[i].y < 0 || circulos[i].y > height) {
-    circulos[i].x -= cos(angle) * 0.5; // Mover hacia afuera
-    circulos[i].y -= sin(angle) * 0.5;
-  } else {
-    // Mover lentamente hacia el borde de la pantalla
-    circulos[i].x -= cos(angle) * 0.5;
-    circulos[i].y -= sin(angle) * 0.5;
-  }
 
   if (circulosNaranjas[i].x < 0 || circulosNaranjas[i].x > width || circulosNaranjas[i].y < 0 || circulosNaranjas[i].y > height) {
-    circulosNaranjas[i].x -= cos(angleNaranja) * 0.5; // Mover hacia afuera
-    circulosNaranjas[i].y -= sin(angleNaranja) * 0.5;
+    circulosNaranjas[i].x -= cos(angleNaranja)*2; // Mover hacia afuera
+    circulosNaranjas[i].y -= sin(angleNaranja)*2;
   } else {
     // Mover lentamente hacia el borde de la pantalla
-    circulosNaranjas[i].x -= cos(angleNaranja) * 0.5;
-    circulosNaranjas[i].y -= sin(angleNaranja) * 0.5;
+    circulosNaranjas[i].x -= cos(angleNaranja)*2;
+    circulosNaranjas[i].y -= sin(angleNaranja)*2;
   }
 }
-
 void manejarColisiones() {
   for (int i = 1; i < cantidadCirculos; i++) {
     for (int j = i + 1; j < cantidadCirculos; j++) {
@@ -783,8 +836,9 @@ void manejarColisionesCirculoVerde(int i) {
         // Círculo verde
         circulosNaranjas[j].x = mouseX;
         circulosNaranjas[j].y = mouseY;
-      }}
-    
+      }
+    }
+
 
     // Actualiza queVerde basado en cualquier pegado
     if (algunaPegada) {
@@ -797,7 +851,6 @@ void manejarColisionesCirculoVerde(int i) {
       queVerde = 1;
       contadorSonar=0;
     }
-
   }
 }
 
@@ -990,32 +1043,14 @@ void manejarColisionesEntreRojosYNaranjas(int i) {
           circulosNaranjas[k].x -= ax*4;
           circulosNaranjas[k].y -= ay*4;
         }
+        if (estado.equals("Mediacion")) {
+
+          circulosNaranjas[k].x -= ax*4;
+          circulosNaranjas[k].y -= ay*4;
+          circulos[j].x -= ax*4;
+          circulos[j].y -= ay*4;
+        }
       }
     }
   }
 }
-/*
- float dx = mouseX - circulos[j].x;
- float dy = mouseY - circulos[j].y;
- float dist = sqrt(dx * dx + dy * dy);
- float minDist = tamVerde; // El tamaño del círculo verde
- 
- 
- 
- if (dist < minDist) { // Calcula la respuesta de colisión
- float angle = atan2(dy, dx);
- float targetX = mouseX + cos(angle) * minDist;
- float targetY = mouseY + sin(angle) * minDist;
- float ax = (targetX - circulos[j].x) * 0.05;
- float ay = (targetY - circulos[j].y) * 0.05;
- circulos[j].x -= ax;
- circulos[j].y -= ay;
- }
- 
- float angle = atan2(dy, dx);
- float targetX = mouseX + cos(angle) * minDist;
- float targetY = mouseY + sin(angle) * minDist;
- float ax = (targetX - circulos[j].x) * 0.05;
- float ay = (targetY - circulos[j].y) * 0.05;
- circulos[j].x -= ax;
- circulos[j].y -= ay;*/
